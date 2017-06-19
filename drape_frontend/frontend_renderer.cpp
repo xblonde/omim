@@ -812,6 +812,13 @@ void FrontendRenderer::AcceptMessage(ref_ptr<Message> message)
       break;
     }
 
+  case Message::FinishTexturesInitialization:
+    {
+      ref_ptr<FinishTexturesInitializationMessage> msg = message;
+      m_finishTexturesInitialization = true;
+      break;
+    }
+
   default:
     ASSERT(false, ());
   }
@@ -1169,6 +1176,19 @@ void FrontendRenderer::RenderScene(ScreenBase const & modelView)
     StencilWriterGuard guard(make_ref(m_postprocessRenderer));
     RenderOverlayLayer(modelView);
     RenderUserMarksLayer(modelView, RenderLayer::LocalAdsMarkID);
+  }
+
+  if (m_subwayModeEnabled && m_finishTexturesInitialization)
+  {
+    dp::TextureManager::ColorRegion region;
+    m_texMng->GetColorRegion(dp::Color(0, 0, 0, 200), region); // TODO: move color to style.
+    if (!m_subwayBackground->IsInitialized())
+    {
+      auto prg = m_gpuProgramManager->GetProgram(gpu::SCREEN_QUAD_PROGRAM);
+      m_subwayBackground->SetTextureRect(region.GetTexRect(), prg);
+    }
+    m_subwayBackground->RenderTexture(make_ref(m_gpuProgramManager),
+                                      static_cast<uint32_t>(region.GetTexture()->GetID()), 1.0f);
   }
 
   m_gpsTrackRenderer->RenderTrack(modelView, m_currentZoomLevel, make_ref(m_gpuProgramManager),
@@ -1742,6 +1762,8 @@ void FrontendRenderer::OnContextDestroy()
   m_drapeApiRenderer->Clear();
   m_postprocessRenderer->ClearGLDependentResources();
 
+  m_subwayBackground.reset();
+
   dp::DebugRectRenderer::Instance().Destroy();
 
   m_gpuProgramManager.reset();
@@ -1750,6 +1772,8 @@ void FrontendRenderer::OnContextDestroy()
   m_needRestoreSize = true;
   m_firstTilesReady = false;
   m_firstLaunchAnimationInterrupted = false;
+
+  m_finishTexturesInitialization = false;
 }
 
 void FrontendRenderer::OnContextCreate()
@@ -1802,6 +1826,8 @@ void FrontendRenderer::OnContextCreate()
   {
     m_postprocessRenderer->OnFramebufferFallback();
   });
+
+  m_subwayBackground.reset(new ScreenQuadRenderer());
 }
 
 FrontendRenderer::Routine::Routine(FrontendRenderer & renderer) : m_renderer(renderer) {}
@@ -1923,6 +1949,7 @@ void FrontendRenderer::ReleaseResources()
   m_screenQuadRenderer.reset();
   m_trafficRenderer.reset();
   m_postprocessRenderer.reset();
+  m_subwayBackground.reset();
 
   m_gpuProgramManager.reset();
   m_contextFactory->getDrawContext()->doneCurrent();

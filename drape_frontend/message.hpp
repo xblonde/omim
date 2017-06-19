@@ -83,6 +83,7 @@ public:
     RunFirstLaunchAnimation,
     UpdateMetalines,
     SetSubwayModeEnabled,
+    FinishTexturesInitialization,
   };
 
   virtual ~Message() {}
