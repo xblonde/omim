@@ -489,6 +489,11 @@ void RoutingManager::InsertRoute(Route const & route)
         FillTrafficForRendering(segments, subroute->m_traffic);
         FillTurnsDistancesForRendering(segments, subroute->m_turns);
         break;
+      case RouterType::Subway:
+        subroute->m_routeType = df::RouteType::Subway;
+        subroute->m_color = df::kRouteColor;
+        //subroute->m_subwayColoring = ; // TODO: fill from route.
+        break;
       default: ASSERT(false, ("Unknown router type"));
     }
 
