@@ -159,6 +159,7 @@ private:
       UserLineID,
       OverlayID,
       LocalAdsMarkID,
+      SubwayID,
       Geometry3dID,
       UserMarkID,
       NavigationID,
@@ -177,6 +178,7 @@ private:
   void Render2dLayer(ScreenBase const & modelView);
   void Render3dLayer(ScreenBase const & modelView, bool useFramebuffer);
   void RenderOverlayLayer(ScreenBase const & modelView);
+  void RenderSubwayLayer(ScreenBase const & modelView);
   void RenderNavigationOverlayLayer(ScreenBase const & modelView);
   void RenderUserMarksLayer(ScreenBase const & modelView, RenderLayer::RenderLayerID layerId);
   void RenderUserLinesLayer(ScreenBase const & modelView);
