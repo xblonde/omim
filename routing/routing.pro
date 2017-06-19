@@ -63,6 +63,7 @@ SOURCES += \
     speed_camera.cpp \
     subway_graph.cpp \
     subway_model.cpp \
+    subway_router.cpp \
     traffic_stash.cpp \
     turns.cpp \
     turns_generator.cpp \
@@ -135,6 +136,7 @@ HEADERS += \
     subway_edge.hpp \
     subway_graph.hpp \
     subway_model.hpp \
+    subway_router.hpp \
     traffic_stash.hpp \
     transition_points.hpp \
     turn_candidate.hpp \
