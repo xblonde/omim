@@ -15,6 +15,7 @@
 #include "routing/route.hpp"
 #include "routing/routing_algorithm.hpp"
 #include "routing/routing_helpers.hpp"
+#include "routing/subway_router.hpp"
 
 #include "drape_frontend/drape_engine.hpp"
 
@@ -373,28 +374,37 @@ void RoutingManager::SetRouterImpl(RouterType type)
   auto numMwmIds = make_shared<NumMwmIds>();
   m_delegate.RegisterCountryFilesOnRoute(numMwmIds);
 
-  auto & index = m_callbacks.m_indexGetter();
+  if (type == RouterType::Subway)
+  {
+    auto router = my::make_unique<SubwayRouter>(numMwmIds, indexGetterFn());
+    m_routingSession.SetRoutingSettings(routing::GetSubwayRoutingSettings());
+    m_routingSession.SetRouter(std::move(router), nullptr);
+  }
+  else
+  {
+    auto & index = m_callbacks.m_indexGetter();
 
-  auto localFileChecker = [this](std::string const & countryFile) -> bool {
-    MwmSet::MwmId const mwmId = m_callbacks.m_indexGetter().GetMwmIdByCountryFile(
-      platform::CountryFile(countryFile));
-    if (!mwmId.IsAlive())
-      return false;
+    auto localFileChecker = [this](std::string const & countryFile) -> bool {
+      MwmSet::MwmId const mwmId = m_callbacks.m_indexGetter().GetMwmIdByCountryFile(
+        platform::CountryFile(countryFile));
+      if (!mwmId.IsAlive())
+        return false;
 
-    return version::MwmTraits(mwmId.GetInfo()->m_version).HasRoutingIndex();
-  };
+      return version::MwmTraits(mwmId.GetInfo()->m_version).HasRoutingIndex();
+    };
 
-  auto const getMwmRectByName = [this](std::string const & countryId) -> m2::RectD {
-    return m_callbacks.m_countryInfoGetter().GetLimitRectForLeaf(countryId);
-  };
+    auto const getMwmRectByName = [this](std::string const & countryId) -> m2::RectD {
+      return m_callbacks.m_countryInfoGetter().GetLimitRectForLeaf(countryId);
+    };
 
-  auto fetcher = make_unique<OnlineAbsentCountriesFetcher>(countryFileGetter, localFileChecker);
-  auto router = IndexRouter::Create(vehicleType, countryFileGetter, getMwmRectByName, numMwmIds,
-                                    MakeNumMwmTree(*numMwmIds, m_callbacks.m_countryInfoGetter()),
-                                    m_routingSession, index);
+    auto fetcher = make_unique<OnlineAbsentCountriesFetcher>(countryFileGetter, localFileChecker);
+    auto router = IndexRouter::Create(vehicleType, countryFileGetter, getMwmRectByName, numMwmIds,
+                                      MakeNumMwmTree(*numMwmIds, m_callbacks.m_countryInfoGetter()),
+                                      m_routingSession, index);
 
-  m_routingSession.SetRoutingSettings(GetRoutingSettings(vehicleType));
-  m_routingSession.SetRouter(std::move(router), std::move(fetcher));
+    m_routingSession.SetRoutingSettings(GetRoutingSettings(vehicleType));
+    m_routingSession.SetRouter(std::move(router), std::move(fetcher));
+  }
   m_currentRouterType = type;
 }
 
@@ -1065,5 +1075,7 @@ void RoutingManager::SaveRoutePoints() const
 void RoutingManager::BuildSubwayRoute(m2::PointD const & startPoint,
                                       m2::PointD const & finishPoint)
 {
-  //TODO: set router, build route
+  SetRouter(RouterType::Subway);
+  routing::Checkpoints checkpoints = {startPoint, finishPoint};
+  m_routingSession.BuildRoute(checkpoints, 0 /* timeoutSec */);
 }
