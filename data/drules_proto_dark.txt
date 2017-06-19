@@ -61659,8 +61659,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      join: BEVELJOIN
-      cap: BUTTCAP
     }
   }
   element {
@@ -61668,8 +61666,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      join: BEVELJOIN
-      cap: BUTTCAP
     }
   }
   element {
@@ -61677,8 +61673,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      join: BEVELJOIN
-      cap: BUTTCAP
     }
   }
   element {
@@ -61686,7 +61680,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      cap: BUTTCAP
     }
   }
   element {
@@ -61694,7 +61687,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      cap: BUTTCAP
     }
   }
   element {
@@ -61702,7 +61694,6 @@ cont {
     lines {
       width: 5.0
       priority: 1000
-      cap: BUTTCAP
     }
   }
   element {
