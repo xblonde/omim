@@ -229,6 +229,8 @@ public:
   /// \brief It saves route points to file.
   void SaveRoutePoints() const;
 
+  void BuildSubwayRoute(m2::PointD const & startPoint, m2::PointD const & finishPoint);
+
 private:
   void InsertRoute(routing::Route const & route);
   bool IsTrackingReporterEnabled() const;

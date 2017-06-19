@@ -1061,3 +1061,9 @@ void RoutingManager::SaveRoutePoints() const
     LOG(LWARNING, ("Saving road points failed:", ex.Msg()));
   }
 }
+
+void RoutingManager::BuildSubwayRoute(m2::PointD const & startPoint,
+                                      m2::PointD const & finishPoint)
+{
+  //TODO: set router, build route
+}

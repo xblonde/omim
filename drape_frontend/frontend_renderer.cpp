@@ -138,6 +138,7 @@ FrontendRenderer::FrontendRenderer(Params && params)
   , m_forceUpdateScene(false)
   , m_forceUpdateUserMarks(false)
   , m_postprocessRenderer(new PostprocessRenderer())
+  , m_subwayModeEnabled(params.m_subwayModeEnabled)
 #ifdef SCENARIO_ENABLE
   , m_scenarioManager(new ScenarioManager(this))
 #endif
@@ -801,6 +802,13 @@ void FrontendRenderer::AcceptMessage(ref_ptr<Message> message)
       ref_ptr<RunFirstLaunchAnimationMessage> msg = message;
       m_firstLaunchAnimationTriggered = true;
       CheckAndRunFirstLaunchAnimation();
+      break;
+    }
+
+  case Message::SetSubwayModeEnabled:
+    {
+      ref_ptr<SetSubwayModeEnabledMessage> msg = message;
+      m_subwayModeEnabled = msg->IsEnabled();
       break;
     }
 
