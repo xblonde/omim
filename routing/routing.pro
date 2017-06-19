@@ -89,7 +89,6 @@ HEADERS += \
     cross_mwm_router.hpp \
     cross_routing_context.hpp \
     directions_engine.hpp \
-    edge.hpp \
     edge_estimator.hpp \
     features_road_graph.hpp \
     geometry.hpp \
@@ -133,6 +132,7 @@ HEADERS += \
     segment.hpp \
     segmented_route.hpp \
     speed_camera.hpp \
+    subway_edge.hpp \
     subway_graph.hpp \
     subway_model.hpp \
     traffic_stash.hpp \
