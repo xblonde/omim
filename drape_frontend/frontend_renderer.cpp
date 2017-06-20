@@ -1194,11 +1194,16 @@ void FrontendRenderer::RenderScene(ScreenBase const & modelView)
 
     GLFunctions::glEnable(gl_const::GLDepthTest);
     GLFunctions::glClear(gl_const::GLDepthBit);
-    RenderSubwayLayer(modelView);
 
+    RenderSubwayLayer(modelView);
     RenderTrafficAndRouteLayer(modelView);
+
     GLFunctions::glClear(gl_const::GLDepthBit);
     GLFunctions::glDisable(gl_const::GLDepthTest);
+    {
+      StencilWriterGuard guard(make_ref(m_postprocessRenderer));
+      RenderSubwayOverlayLayer(modelView);
+    }
   }
 
   m_gpsTrackRenderer->RenderTrack(modelView, m_currentZoomLevel, make_ref(m_gpuProgramManager),
@@ -1255,8 +1260,11 @@ void FrontendRenderer::RenderSubwayLayer(ScreenBase const & modelView)
   RenderLayer & layerSubway = m_layers[RenderLayer::SubwayID];
   layerSubway.Sort(make_ref(m_overlayTree));
 
-  for (drape_ptr<RenderGroup> const & group : layerSubway.m_renderGroups)
-    RenderSingleGroup(modelView, make_ref(group));
+  for (auto const & group : layerSubway.m_renderGroups)
+  {
+    if (!group->HasOverlayHandles())
+      RenderSingleGroup(modelView, make_ref(group));
+  }
 }
 
 void FrontendRenderer::Render3dLayer(ScreenBase const & modelView, bool useFramebuffer)
@@ -1314,6 +1322,16 @@ void FrontendRenderer::RenderNavigationOverlayLayer(ScreenBase const & modelView
   }
 }
 
+void FrontendRenderer::RenderSubwayOverlayLayer(ScreenBase const & modelView)
+{
+  RenderLayer & subwayOverlay = m_layers[RenderLayer::SubwayID];
+  for (drape_ptr<RenderGroup> & group : subwayOverlay.m_renderGroups)
+  {
+    if (group->HasOverlayHandles())
+      RenderSingleGroup(modelView, make_ref(group));
+  }
+}
+
 void FrontendRenderer::RenderTrafficAndRouteLayer(ScreenBase const & modelView)
 {
   GLFunctions::glClear(gl_const::GLDepthBit);
@@ -1356,12 +1374,13 @@ void FrontendRenderer::RenderUserLinesLayer(ScreenBase const & modelView)
 
 void FrontendRenderer::BuildOverlayTree(ScreenBase const & modelView)
 {
-  static std::vector<RenderLayer::RenderLayerID> layers = {RenderLayer::OverlayID,
-                                                           RenderLayer::LocalAdsMarkID,
-                                                           RenderLayer::NavigationID,
-                                                           RenderLayer::RoutingMarkID};
+  static auto layers = {RenderLayer::OverlayID, RenderLayer::LocalAdsMarkID,
+                        RenderLayer::NavigationID, RenderLayer::RoutingMarkID};
+  static auto subwayLayers = {RenderLayer::OverlayID, RenderLayer::SubwayID,
+                              RenderLayer::LocalAdsMarkID, RenderLayer::RoutingMarkID};
+
   BeginUpdateOverlayTree(modelView);
-  for (auto const & layerId : layers)
+  for (auto const & layerId : (m_subwayModeEnabled ? subwayLayers : layers))
   {
     RenderLayer & overlay = m_layers[layerId];
     overlay.Sort(make_ref(m_overlayTree));
