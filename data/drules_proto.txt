@@ -61927,22 +61927,10 @@ cont {
 cont {
   name: "subway_meta-change"
   element {
-    scale: 10
-    lines {
-      width: 2.0
-      dashdot {
-        dd: 5.4
-        dd: 2.7
-      }
-      priority: 1000
-      join: BEVELJOIN
-      cap: BUTTCAP
-    }
-  }
-  element {
     scale: 11
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -61956,6 +61944,7 @@ cont {
     scale: 12
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -61969,6 +61958,7 @@ cont {
     scale: 13
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -61981,6 +61971,7 @@ cont {
     scale: 14
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -61993,6 +61984,7 @@ cont {
     scale: 15
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -62005,6 +61997,7 @@ cont {
     scale: 16
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -62016,6 +62009,7 @@ cont {
     scale: 17
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -62027,6 +62021,7 @@ cont {
     scale: 18
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -62038,6 +62033,7 @@ cont {
     scale: 19
     lines {
       width: 2.0
+      color: 7829367
       dashdot {
         dd: 5.4
         dd: 2.7
@@ -62049,44 +62045,37 @@ cont {
 cont {
   name: "subway_meta-line"
   element {
-    scale: 10
-    lines {
-      width: 5.0
-      priority: 1000
-    }
-  }
-  element {
     scale: 11
     lines {
-      width: 5.0
+      width: 2.0
       priority: 1000
     }
   }
   element {
     scale: 12
     lines {
-      width: 5.0
+      width: 3.0
       priority: 1000
     }
   }
   element {
     scale: 13
     lines {
-      width: 5.0
+      width: 4.0
       priority: 1000
     }
   }
   element {
     scale: 14
     lines {
-      width: 5.0
+      width: 4.0
       priority: 1000
     }
   }
   element {
     scale: 15
     lines {
-      width: 5.0
+      width: 4.0
       priority: 1000
     }
   }
@@ -62100,21 +62089,21 @@ cont {
   element {
     scale: 17
     lines {
-      width: 5.0
+      width: 6.0
       priority: 1000
     }
   }
   element {
     scale: 18
     lines {
-      width: 5.0
+      width: 6.0
       priority: 1000
     }
   }
   element {
     scale: 19
     lines {
-      width: 5.0
+      width: 6.0
       priority: 1000
     }
   }
