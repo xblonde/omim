@@ -20,9 +20,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.facebook.ads.AdView;
+import com.google.android.gms.ads.search.SearchAdView;
 import com.mapswithme.maps.MwmActivity;
 import com.mapswithme.maps.MwmApplication;
 import com.mapswithme.maps.R;
+import com.mapswithme.maps.ads.GoogleSearchAd;
 import com.mapswithme.maps.base.BaseMwmFragment;
 import com.mapswithme.maps.base.OnBackPressListener;
 import com.mapswithme.maps.bookmarks.data.FeatureId;
@@ -37,10 +40,13 @@ import com.mapswithme.maps.widget.SearchToolbarController;
 import com.mapswithme.maps.widget.placepage.Sponsored;
 import com.mapswithme.util.UiUtils;
 import com.mapswithme.util.Utils;
+import com.mapswithme.util.concurrency.UiThread;
 import com.mapswithme.util.log.LoggerFactory;
 import com.mapswithme.util.statistics.Statistics;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -52,8 +58,20 @@ public class SearchFragment extends BaseMwmFragment
                                     HotelsFilterHolder
 {
   public static final String PREFS_SHOW_ENABLE_LOGGING_SETTING = "ShowEnableLoggingSetting";
+  private static final long ADS_DELAY_MS = 200;
+  private static final long RESULTS_DELAY_MS = 400;
+  private static final int GOOGLE_AD_POSITION = 3;
 
   private long mLastQueryTimestamp;
+  private GoogleSearchAd googleSearchAd = new GoogleSearchAd();
+  private GoogleAdsLoader mAdsLoader = new GoogleAdsLoader(googleSearchAd.getAdUnitId(), ADS_DELAY_MS);
+  @Nullable
+  private Runnable resultsShowingTask = new Runnable() {
+    @Override
+    public void run() {
+      refreshSearchResults();
+    }
+  };
 
   private static class LastPosition
   {
@@ -90,6 +108,7 @@ public class SearchFragment extends BaseMwmFragment
 
       if (TextUtils.isEmpty(query))
       {
+        mAdsLoader.cancelAdsLoading();
         mSearchAdapter.clear();
         stopSearch();
         return;
@@ -97,12 +116,21 @@ public class SearchFragment extends BaseMwmFragment
 
       if (tryRecognizeLoggingCommand(query))
       {
+        mAdsLoader.cancelAdsLoading();
         mSearchAdapter.clear();
         stopSearch();
         closeSearch();
         return;
       }
 
+      mAdsLoader.scheduleAdsLoading(getContext(), query, new GoogleAdsLoader.AdvertLoadingListener() {
+        @Override
+        public void onLoadingFinished(SearchAdView searchAdView) {
+          mGoogleAdView = searchAdView;
+        }
+      });
+      UiThread.cancelDelayedTasks(resultsShowingTask);
+      UiThread.runLater(resultsShowingTask, RESULTS_DELAY_MS);
       runSearch();
     }
 
@@ -184,6 +212,12 @@ public class SearchFragment extends BaseMwmFragment
   private boolean mInitialSearchOnMap = false;
   @Nullable
   private HotelsFilter mInitialHotelsFilter;
+
+  private boolean mIsHotel;
+  @NonNull
+  private SearchResult[] mSearchResults = new SearchResult[0];
+  @Nullable
+  private SearchAdView mGoogleAdView;
 
   private final LocationListener mLocationListener = new LocationListener.Simple()
   {
@@ -568,13 +602,9 @@ public class SearchFragment extends BaseMwmFragment
   {
     if (!isAdded() || !mToolbarController.hasQuery())
       return;
+    mSearchResults = results;
+    mIsHotel = isHotel;
 
-    // Search is running hence results updated.
-    mSearchRunning = true;
-    updateFrames();
-    mSearchAdapter.refreshData(results);
-    mToolbarController.showProgress(true);
-    updateFilterButton(isHotel);
   }
 
   @Override
@@ -594,6 +624,38 @@ public class SearchFragment extends BaseMwmFragment
                                               Sponsored.TYPE_CIAN);
       showAllResultsOnMap();
     }
+  }
+
+  private void refreshSearchResults() {
+    // Search is running hence results updated.
+    mAdsLoader.cancelAdsLoading();
+    mSearchRunning = true;
+    updateFrames();
+    mSearchAdapter.refreshData(combineResultsWithAds());
+    mToolbarController.showProgress(true);
+    updateFilterButton(mIsHotel);
+  }
+
+  private SearchData[] combineResultsWithAds() {
+    if (mSearchResults.length < GOOGLE_AD_POSITION || mGoogleAdView == null)
+      return mSearchResults;
+    SearchData[] result = new SearchData[mSearchResults.length + 1];
+    int counter = 0;
+    for (int i = 0, j = 0; i < result.length; i++)
+    {
+      if (mSearchResults[j].type != SearchResultTypes.TYPE_SUGGEST)
+      {
+        if (counter++ == GOOGLE_AD_POSITION)
+        {
+          result[i] = new GoogleAdsBanner(mGoogleAdView);
+          continue;
+        }
+      }
+      result[i] = mSearchResults[j];
+      j++;
+    }
+
+    return result;
   }
 
   private void updateFilterButton(boolean isHotel)
